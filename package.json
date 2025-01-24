@@ -11,7 +11,7 @@
 		"@itrocks/reflect": "latest",
 		"@itrocks/transformer": "latest"
 	},
-	"description": "",
+	"description": "Prefabricated HTML and SQL data transformers for it.rocks primitives and basic types",
 	"devDependencies": {
 		"@types/node": "^22.10",
 		"typescript": "^5.6"
@@ -47,5 +47,5 @@
 		"build:esm": "tsc -p tsconfig.esm.json && node esm/esm"
 	},
 	"types": "./esm/core-transformers.d.ts",
-	"version": "0.0.2"
+	"version": "0.0.3"
 }
