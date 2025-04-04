@@ -15,17 +15,21 @@ export type SqlDependencies = {
 
 export type Dependencies = SqlDependencies & {
 	displayOf:              (object: AnyObject, property: string) => string,
+	fieldOf:                (property: string) => string,
+	idOf:                   (property: string) => string,
 	representativeValueOf:  (object: object) => string,
 	routeOf:                (type: Type) => string,
 	tr:                     (text: string) => string
 }
 
 const depends: Dependencies = {
-	displayOf:             (_object, property) => property,
+	displayOf:              (_object, property) => property,
+	fieldOf:                property => property,
+	idOf:                   property => property,
 	ignoreTransformedValue: Symbol('ignoreTransformedValue'),
-	representativeValueOf: object => baseType(typeOf(object)).name,
-	routeOf:               type => '/' + baseType(type).name,
-	tr:                    text => text
+	representativeValueOf:  object => baseType(typeOf(object)).name,
+	routeOf:                type => '/' + baseType(type).name,
+	tr:                     text => text
 }
 
 export function initStoreHtmlTransformers(target: Type)
@@ -57,31 +61,34 @@ export const setStoreSqlDependencies: (dependencies: Partial<SqlDependencies>) =
 
 function storeEdit<T extends object>(value: Entity | undefined, object: T, property: KeyOf<T>)
 {
-	const propertyType   = new ReflectProperty(object, property).type as Type
-	const representative = value ? depends.representativeValueOf(value) : ''
-	const fetch          = depends.routeOf(propertyType) + '/summary'
-	const label          = `<label for="${property}">${depends.tr(depends.displayOf(object, property))}</label>`
-	const name           = `id="${property}" name="${property}"`
-	const inputValue     = representative.length ? ` value="${representative}"` : ''
-	const input          = `<input data-fetch="${fetch}" data-type="object" ${name}${inputValue}>`
-	const input_id       = `<input id="${property}_id" name="${property}_id" type="hidden" value="${value?.id}">`
-	return label + lfTab + input + input_id
+	const fieldName    = depends.fieldOf(property)
+	const fieldId      = depends.idOf(property)
+	const propertyType = new ReflectProperty(object, property).type as Type
+	const textValue    = value ? depends.representativeValueOf(value) : ''
+	const fetch        = depends.routeOf(propertyType) + '/summary'
+	const label        = `<label for="${fieldId}">${depends.tr(depends.displayOf(object, property))}</label>`
+	const name         = `id="${fieldId}" name="${fieldName}"`
+	const inputValue   = (textValue === '') ? '' : ` value="${textValue}"`
+	const input        = `<input data-fetch="${fetch}" data-type="object" ${name}${inputValue}>`
+	const inputId      = `<input id="${fieldId}-id" name="${fieldName}_id" type="hidden" value="${value?.id}">`
+	return label + lfTab + input + inputId
 }
 
 function storeInput<T extends AnyObject>(
 	value: MayEntity | undefined, object: T, property: KeyOf<T>, data: StringObject
 ) {
-	const property_id = property + '_id'
+	const propertyId = property + 'Id'
+	const fieldId    = depends.fieldOf(propertyId)
 	if (
-		(property_id in data)
+		(fieldId in data)
 		&& (
-			(property_id in object)
-				? (data[property_id] !== object[property_id] + '')
-				: (data[property_id] !== (value as Entity | undefined)?.id + '')
+			(propertyId in object)
+				? (data[fieldId] !== object[propertyId] + '')
+				: (data[fieldId] !== (value as Entity | undefined)?.id + '')
 		)
 	) {
 		delete object[property]
-		Object.assign(object, { [property_id]: +data[property_id] })
+		Object.assign(object, { [propertyId]: +data[fieldId] })
 	}
 	return depends.ignoreTransformedValue
 }
@@ -92,14 +99,14 @@ function storeOutput(value: MayEntity | undefined)
 }
 
 async function storeSave<T extends AnyObject>(
-	value: MayEntity | undefined, _object: T, property: KeyOf<T>, saveValues: AnyObject
+	value: MayEntity | undefined, _object: T, property: KeyOf<T>, record: AnyObject
 ) {
 	const dao = dataSource()
 	if (value && !dao.isObjectConnected(value)) {
 		await dao.save(value)
 	}
-	const property_id       = property + '_id'
-	const id                = (value && dao.isObjectConnected(value)) ? value.id : saveValues[property_id]
-	saveValues[property_id] = id ?? null
+	const columnId   = property + '_id'
+	const id         = (value && dao.isObjectConnected(value)) ? value.id : record[columnId]
+	record[columnId] = id ?? null
 	return depends.ignoreTransformedValue
 }

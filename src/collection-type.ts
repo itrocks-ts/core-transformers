@@ -13,6 +13,8 @@ import { HtmlContainer }              from './container'
 
 export type Dependencies = {
 	displayOf:              (object: AnyObject, property: string) => string,
+	fieldNameOf:            (property: string) => string,
+	fieldIdOf:              (property: string) => string,
 	ignoreTransformedValue: any,
 	representativeValueOf:  (object: object) => string,
 	routeOf:                (type: Type) => string,
@@ -20,11 +22,13 @@ export type Dependencies = {
 }
 
 const depends: Dependencies = {
-	displayOf:             (_object, property) => property,
+	displayOf:              (_object, property) => property,
+	fieldNameOf:            property => property,
+	fieldIdOf:              property => property,
 	ignoreTransformedValue: Symbol('ignoreTransformedValue'),
-	representativeValueOf: object => baseType(typeOf(object)).name,
-	routeOf:               type => '/' + baseType(type).name,
-	tr:                    text => text
+	representativeValueOf:  object => baseType(typeOf(object)).name,
+	routeOf:                type => '/' + baseType(type).name,
+	tr:                     text => text
 }
 
 const areMayEntityEntries = (entries: [string, MayEntity | string][]): entries is [string, MayEntity][] =>
@@ -32,21 +36,23 @@ const areMayEntityEntries = (entries: [string, MayEntity | string][]): entries i
 
 function collectionEdit<T extends object>(values: MayEntity[], object: T, property: KeyOf<T>)
 {
+	const fieldId      = depends.fieldIdOf(property)
+	const fieldName    = depends.fieldNameOf(property)
 	const propertyType = new ReflectProperty(object, property).collectionType
 	const fetch        = depends.routeOf(propertyType?.elementType as Type) + '/summary'
-	const label        = `<label for="${property}">${depends.tr(depends.displayOf(object, property))}</label>`
+	const label        = `<label for="${fieldId}">${depends.tr(depends.displayOf(object, property))}</label>`
 	const inputs       = []
 	for (const object of values) {
 		const attrValue = `value="${depends.representativeValueOf(object)}"`
 		inputs.push('<li>' + (
 			dataSource().isObjectConnected(object)
-			? `<input id="${property}.${object.id}" name="${property}.${object.id}" ${attrValue}>`
-			: `<input id="${property}." name="${property}." ${attrValue}>`
+			? `<input id="${fieldId}.${object.id}" name="${fieldName}.${object.id}" ${attrValue}>`
+			: `<input id="${fieldId}." name="${fieldName}." ${attrValue}>`
 		) + '</li>')
 	}
 	return label + `<ul data-multiple-contained-auto-width data-fetch="${fetch}" data-type="objects">`
 		+ inputs.join('')
-		+ `<li><input id="${property}" name="${property}" placeholder="+"></li>`
+		+ `<li><input id="${fieldId}" name="${fieldName}" placeholder="+"></li>`
 		+ '</ul>'
 }
 
@@ -58,7 +64,7 @@ function collectionInput<T extends AnyObject>(values: Record<string, MayEntity |
 	}
 	else {
 		delete object[property]
-		Object.assign(object, { [property + '_ids']: Object.keys(values).map(id => +id) })
+		Object.assign(object, { [property + 'Ids']: Object.keys(values).map(id => +id) })
 	}
 	return depends.ignoreTransformedValue
 }
@@ -95,7 +101,7 @@ function collectionOutput<T extends object, PT extends object>(
 async function collectionSave<T extends AnyObject>(values: MayEntity[] | undefined, object: T, property: KeyOf<T>)
 {
 	const dao = dataSource()
-	const newIdsPromise: Identifier[] = object[property + '_ids']
+	const newIdsPromise: Identifier[] = object[property + 'Ids']
 		?? values?.map(async value => (dao.isObjectConnected(value) ? value : await dao.save(value)).id).sort()
 		?? []
 	const previousIdsPromise = dao.isObjectConnected(object)

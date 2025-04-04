@@ -6,20 +6,24 @@ import { READ, SAVE, SQL }                from '@itrocks/transformer'
 const lfTab = '\n\t\t\t\t'
 
 export type CoreDependencies = {
-	displayOf:  (object: AnyObject, property: string) => string,
-	tr:         (text: string) => string
+	displayOf:   (object: AnyObject, property: string) => string,
+	fieldIdOf:   (property: string) => string,
+	fieldNameOf: (property: string) => string,
+	tr:          (text: string)     => string
 }
 
 export type Dependencies = CoreDependencies & {
-	formatDate: (date: Date) => string,
+	formatDate: (date: Date)   => string,
 	parseDate:  (date: string) => Date,
 }
 
 const depends: Dependencies = {
-	displayOf:  (_object, property) => property,
-	formatDate: date => date.toString(),
-	parseDate:  date => new Date(date),
-	tr:         text => text
+	displayOf:   (_object, property) => property,
+	formatDate:  date     => date.toString(),
+	fieldIdOf:   property => property,
+	fieldNameOf: property => property,
+	parseDate:   date     => new Date(date),
+	tr:          text     => text
 }
 
 // Bigint
@@ -35,11 +39,13 @@ export function initBigintHtmlTransformers()
 
 function booleanEdit<T extends object>(value: boolean, type: ObjectOrType<T>, property: KeyOf<T>)
 {
-	const label    = `<label for="${property}">${depends.tr(depends.displayOf(type, property))}</label>`
-	const name     = `id="${property}" name="${property}"`
-	const hidden   = `<input name="${property}" type="hidden" value="0">`
-	const checked  = value ? 'checked ' : ''
-	const checkbox = `<input ${checked}${name} type="checkbox" value="1">`
+	const fieldId   = depends.fieldIdOf(property)
+	const fieldName = depends.fieldNameOf(property)
+	const label     = `<label for="${fieldId}">${depends.tr(depends.displayOf(type, property))}</label>`
+	const name      = `id="${fieldId}" name="${fieldName}"`
+	const hidden    = `<input name="${fieldName}" type="hidden" value="0">`
+	const checked   = value ? 'checked ' : ''
+	const checkbox  = `<input ${checked}${name} type="checkbox" value="1">`
 	return label + lfTab + hidden + lfTab + checkbox
 }
 
@@ -67,8 +73,10 @@ export function initBooleanSqlTransformers()
 
 function dateEdit<T extends object>(value: Date, type: ObjectOrType<T>, property: KeyOf<T>)
 {
-	const label      = `<label for="${property}">${depends.tr(depends.displayOf(type, property))}</label>`
-	const name       = `id="${property}" name="${property}"`
+	const fieldId    = depends.fieldIdOf(property)
+	const fieldName  = depends.fieldNameOf(property)
+	const label      = `<label for="${fieldId}">${depends.tr(depends.displayOf(type, property))}</label>`
+	const name       = `id="${fieldId}" name="${fieldName}"`
 	const inputValue = value ? ` value="${depends.formatDate(value)}"` : ''
 	const input      = `<input data-type="date" ${name}${inputValue}>`
 	return label + lfTab + input
@@ -90,8 +98,10 @@ export function initDateHtmlTransformers()
 
 function numberEdit<T extends object>(value: number | undefined, type: ObjectOrType<T>, property: KeyOf<T>)
 {
-	const label      = `<label for="${property}">${depends.tr(depends.displayOf(type, property))}</label>`
-	const name       = `id="${property}" name="${property}"`
+	const fieldId    = depends.fieldIdOf(property)
+	const fieldName  = depends.fieldNameOf(property)
+	const label      = `<label for="${fieldId}">${depends.tr(depends.displayOf(type, property))}</label>`
+	const name       = `id="${fieldId}" name="${fieldName}"`
 	const inputValue = (value !== undefined) ? ` value="${value}"` : ''
 	const input      = `<input data-type="number" ${name}${inputValue}>`
 	return label + lfTab + input
@@ -109,8 +119,10 @@ export function initNumberHtmlTransformers()
 
 function defaultEdit<T extends object>(value: any, type: ObjectOrType<T>, property: KeyOf<T>)
 {
-	const label      = `<label for="${property}">${depends.tr(depends.displayOf(type, property))}</label>`
-	const name       = `id="${property}" name="${property}"`
+	const fieldId    = depends.fieldIdOf(property)
+	const fieldName  = depends.fieldNameOf(property)
+	const label      = `<label for="${fieldId}">${depends.tr(depends.displayOf(type, property))}</label>`
+	const name       = `id="${fieldId}" name="${fieldName}"`
 	const inputValue = value ? ` value="${value}"` : ''
 	const input      = `<input ${name}${inputValue}>`
 	return label + lfTab + input
