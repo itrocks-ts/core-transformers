@@ -15,8 +15,8 @@ export type SqlDependencies = {
 
 export type Dependencies = SqlDependencies & {
 	displayOf:              (object: AnyObject, property: string) => string,
-	fieldOf:                (property: string) => string,
-	idOf:                   (property: string) => string,
+	fieldIdOf:              (property: string) => string,
+	fieldNameOf:            (property: string) => string,
 	representativeValueOf:  (object: object) => string,
 	routeOf:                (type: Type) => string,
 	tr:                     (text: string) => string
@@ -24,8 +24,8 @@ export type Dependencies = SqlDependencies & {
 
 const depends: Dependencies = {
 	displayOf:              (_object, property) => property,
-	fieldOf:                property => property,
-	idOf:                   property => property,
+	fieldIdOf:              property => property,
+	fieldNameOf:            property => property,
 	ignoreTransformedValue: Symbol('ignoreTransformedValue'),
 	representativeValueOf:  object => baseType(typeOf(object)).name,
 	routeOf:                type => '/' + baseType(type).name,
@@ -61,8 +61,8 @@ export const setStoreSqlDependencies: (dependencies: Partial<SqlDependencies>) =
 
 function storeEdit<T extends object>(value: Entity | undefined, object: T, property: KeyOf<T>)
 {
-	const fieldName    = depends.fieldOf(property)
-	const fieldId      = depends.idOf(property)
+	const fieldName    = depends.fieldNameOf(property)
+	const fieldId      = depends.fieldIdOf(property)
 	const propertyType = new ReflectProperty(object, property).type as Type
 	const textValue    = value ? depends.representativeValueOf(value) : ''
 	const fetch        = depends.routeOf(propertyType) + '/summary'
@@ -75,10 +75,10 @@ function storeEdit<T extends object>(value: Entity | undefined, object: T, prope
 }
 
 function storeInput<T extends AnyObject>(
-	value: MayEntity | undefined, object: T, property: KeyOf<T>, data: StringObject
+	value: MayEntity | string | undefined, object: T, property: KeyOf<T>, data: StringObject
 ) {
 	const propertyId = property + 'Id'
-	const fieldId    = depends.fieldOf(propertyId)
+	const fieldId    = depends.fieldNameOf(propertyId)
 	if (
 		(fieldId in data)
 		&& (
@@ -88,7 +88,17 @@ function storeInput<T extends AnyObject>(
 		)
 	) {
 		delete object[property]
-		Object.assign(object, { [propertyId]: +data[fieldId] })
+		const  id = +data[fieldId]
+		if (id) {
+			Object.assign(object, { [propertyId]: id })
+		}
+		else if ((typeof value === 'object')) {
+			Object.assign(object, { [property]: value })
+		}
+		else if ((typeof value === 'string') && (value !== '')) {
+			const reflectProperty = new ReflectProperty(object, property)
+			Object.assign(object, { [property]: new (reflectProperty.type as Type)(value) })
+		}
 	}
 	return depends.ignoreTransformedValue
 }
