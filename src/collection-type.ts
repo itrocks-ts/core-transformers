@@ -39,7 +39,7 @@ function collectionEdit<T extends object>(values: MayEntity[], object: T, proper
 	const fieldId      = depends.fieldIdOf(property)
 	const fieldName    = depends.fieldNameOf(property)
 	const propertyType = new ReflectProperty(object, property).collectionType
-	const fetch        = depends.routeOf(propertyType?.elementType as Type) + '/summary'
+	const fetch        = depends.routeOf(propertyType.elementType.type as Type) + '/summary'
 	const label        = `<label for="${fieldId}">${depends.tr(depends.displayOf(object, property))}</label>`
 	const inputs       = []
 	for (const object of values) {
@@ -76,20 +76,18 @@ function collectionOutput<T extends object, PT extends object>(
 		return ''
 	}
 	if (componentOf(object, property)) {
-		const propertyType = new ReflectProperty(object, property).type
-		if (propertyType instanceof CollectionType) {
-			const type          = propertyType.elementType
-			const propertyClass = new ReflectClass(type)
-			const properties    = propertyClass.propertyNames.filter(property => !compositeOf(type, property)) as KeyOf<PT>[]
-			const html = []
-			html.push('<table>')
-			html.push('<tr>' + properties.map(property => '<th>' + depends.tr(property) + '</th>').join('') + '</tr>')
-			html.push(...values.map(
-				value => '<tr>' + properties.map(property => '<td>' + value[property] + '</td>').join('') + '</tr>'
-			))
-			html.push('</table>')
-			return html.join('\n')
-		}
+		const propertyType = new ReflectProperty(object, property).collectionType
+		const type          = propertyType.elementType.type as Type
+		const propertyClass = new ReflectClass(type)
+		const properties    = propertyClass.propertyNames.filter(property => !compositeOf(type, property)) as KeyOf<PT>[]
+		const html = []
+		html.push('<table>')
+		html.push('<tr>' + properties.map(property => '<th>' + depends.tr(property) + '</th>').join('') + '</tr>')
+		html.push(...values.map(
+			value => '<tr>' + properties.map(property => '<td>' + value[property] + '</td>').join('') + '</tr>'
+		))
+		html.push('</table>')
+		return html.join('\n')
 	}
 	if (askFor?.container) {
 		askFor.container = false

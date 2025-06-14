@@ -1,11 +1,11 @@
 import {AnyObject, baseType, KeyOf, typeOf} from '@itrocks/class-type'
-import { StringObject }                  from '@itrocks/class-type'
-import { Type }                          from '@itrocks/class-type'
-import { ReflectProperty }               from '@itrocks/reflect'
-import { dataSource, Entity, MayEntity } from '@itrocks/storage'
-import { setPropertyTypeTransformer }    from '@itrocks/transformer'
-import { EDIT, HTML }                    from '@itrocks/transformer'
-import { INPUT, OUTPUT, SAVE, SQL }      from '@itrocks/transformer'
+import { StringObject }                     from '@itrocks/class-type'
+import { Type }                             from '@itrocks/class-type'
+import { ReflectProperty }                  from '@itrocks/reflect'
+import { dataSource, Entity, MayEntity }    from '@itrocks/storage'
+import { setPropertyTypeTransformer }       from '@itrocks/transformer'
+import { EDIT, HTML }                       from '@itrocks/transformer'
+import { INPUT, OUTPUT, SAVE, SQL }         from '@itrocks/transformer'
 
 const lfTab = '\n\t\t\t\t'
 
@@ -61,16 +61,16 @@ export const setStoreSqlDependencies: (dependencies: Partial<SqlDependencies>) =
 
 function storeEdit<T extends object>(value: Entity | undefined, object: T, property: KeyOf<T>)
 {
-	const fieldName    = depends.fieldNameOf(property)
-	const fieldId      = depends.fieldIdOf(property)
-	const propertyType = new ReflectProperty(object, property).type as Type
-	const textValue    = value ? depends.representativeValueOf(value) : ''
-	const fetch        = depends.routeOf(propertyType) + '/summary'
-	const label        = `<label for="${fieldId}">${depends.tr(depends.displayOf(object, property))}</label>`
-	const name         = `id="${fieldId}" name="${fieldName}"`
-	const inputValue   = (textValue === '') ? '' : ` value="${textValue}"`
-	const input        = `<input data-fetch="${fetch}" data-type="object" ${name}${inputValue}>`
-	const inputId      = `<input id="${fieldId}-id" name="${fieldName}_id" type="hidden" value="${value?.id}">`
+	const fieldName  = depends.fieldNameOf(property)
+	const fieldId    = depends.fieldIdOf(property)
+	const type       = new ReflectProperty(object, property).type.type as Type
+	const textValue  = value ? depends.representativeValueOf(value) : ''
+	const fetch      = depends.routeOf(type) + '/summary'
+	const label      = `<label for="${fieldId}">${depends.tr(depends.displayOf(object, property))}</label>`
+	const name       = `id="${fieldId}" name="${fieldName}"`
+	const inputValue = (textValue === '') ? '' : ` value="${textValue}"`
+	const input      = `<input data-fetch="${fetch}" data-type="object" ${name}${inputValue}>`
+	const inputId    = `<input id="${fieldId}-id" name="${fieldName}_id" type="hidden" value="${value?.id}">`
 	return label + lfTab + input + inputId
 }
 
@@ -97,7 +97,7 @@ function storeInput<T extends AnyObject>(
 		}
 		else if ((typeof value === 'string') && (value !== '')) {
 			const reflectProperty = new ReflectProperty(object, property)
-			Object.assign(object, { [property]: new (reflectProperty.type as Type)(value) })
+			Object.assign(object, { [property]: new (reflectProperty.type.type as Type)(value) })
 		}
 	}
 	return depends.ignoreTransformedValue
