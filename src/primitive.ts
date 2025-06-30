@@ -110,8 +110,10 @@ function numberEdit<T extends object>(value: number | undefined, type: ObjectOrT
 export function initNumberHtmlTransformers()
 {
 	setPropertyTypeTransformers(Number, [
-		{ format: HTML, direction: EDIT, transformer: numberEdit },
-		{ format: HTML, direction: INPUT, transformer: (value: string) => +value }
+		{ format: HTML, direction: EDIT,   transformer: numberEdit },
+		{ format: HTML, direction: INPUT,  transformer: (value: string) => (value === '') ? undefined : +value },
+		{ format: HTML, direction: OUTPUT, transformer: (value?: number) => (value === undefined) ? '' : ('' + value) },
+		{ format: SQL,  direction: READ,   transformer: (value: number | null) => (value === null) ? undefined : value }
 	])
 }
 
