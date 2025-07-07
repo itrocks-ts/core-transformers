@@ -44,15 +44,20 @@ function collectionEdit<T extends object>(values: MayEntity[], object: T, proper
 	const inputs       = []
 	for (const object of values) {
 		const attrValue = `value="${depends.representativeValueOf(object)}"`
-		inputs.push('<li>' + (
-			dataSource().isObjectConnected(object)
-			? `<input id="${fieldId}.${object.id}" name="${fieldName}.${object.id}" ${attrValue}>`
-			: `<input id="${fieldId}." name="${fieldName}." ${attrValue}>`
-		) + '</li>')
+		const objectId  = dataSource().isObjectConnected(object) ? '' + object.id : ''
+		inputs.push(
+			'<li>'
+			+ `<input name="${fieldName}.${objectId}" ${attrValue}>`
+			+ `<input id="${fieldId}-id.${objectId}" name="${fieldName}_id.${objectId}" type="hidden" value="${objectId}">`
+			+ '</li>'
+		)
 	}
 	return label + `<ul data-multiple-contained-auto-width data-fetch="${fetch}" data-type="objects">`
 		+ inputs.join('')
-		+ `<li><input id="${fieldId}" name="${fieldName}" placeholder="+"></li>`
+		+ '<li>'
+		+ `<input name="${fieldName}." placeholder="+">`
+		+ `<input id="${fieldId}-id." name="${fieldName}_id." type="hidden">`
+		+ '</li>'
 		+ '</ul>'
 }
 
