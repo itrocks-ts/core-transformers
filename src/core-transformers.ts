@@ -6,16 +6,18 @@ import { initPrimitiveTransformers }                  from './primitive'
 import { Dependencies as StoreDependencies }          from './store'
 import { setStoreDependencies }                       from './store'
 
-export {
-	HtmlContainer,
-	initContainerTransformers
-} from './container'
+type Dependencies = CollectionTypeDependencies & PrimitiveDependencies & StoreDependencies
 
 export {
 	initCollectionHtmlTransformers,
 	initCollectionSqlTransformers,
 	initCollectionTransformers
 } from './collection-type'
+
+export {
+	HtmlContainer,
+	initContainerTransformers
+} from './container'
 
 export {
 	initBigintHtmlTransformers,
@@ -37,8 +39,6 @@ export {
 	setStoreSqlDependencies,
 	setStoreHtmlDependencies
 } from './store'
-
-type Dependencies = CollectionTypeDependencies & PrimitiveDependencies & StoreDependencies
 
 export function initCoreTransformers(dependencies: Partial<Dependencies>)
 {

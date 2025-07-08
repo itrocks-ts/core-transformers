@@ -4,6 +4,7 @@ import { Identifier, MayEntity }      from '@itrocks/storage'
 import { AnyObject, baseType }        from '@itrocks/class-type'
 import { KeyOf, Type, typeOf }        from '@itrocks/class-type'
 import { CollectionType }             from '@itrocks/property-type'
+import { toField }                    from '@itrocks/rename'
 import { ReflectClass }               from '@itrocks/reflect'
 import { ReflectProperty }            from '@itrocks/reflect'
 import { EDIT, HTML }                 from '@itrocks/transformer'
@@ -55,21 +56,25 @@ function collectionEdit<T extends object>(values: MayEntity[], object: T, proper
 	return label + `<ul data-multiple-contained-auto-width data-fetch="${fetch}" data-type="objects">`
 		+ inputs.join('')
 		+ '<li>'
-		+ `<input name="${fieldName}." placeholder="+">`
-		+ `<input id="${fieldId}-id." name="${fieldName}_id." type="hidden">`
+		+ `<input name="${fieldName}" placeholder="+">`
+		+ `<input id="${fieldId}-id" name="${fieldName}_id" type="hidden">`
 		+ '</li>'
 		+ '</ul>'
 }
 
-function collectionInput<T extends AnyObject>(values: Record<string, MayEntity | string>, object: T, property: KeyOf<T>)
-{
+function collectionInput<T extends AnyObject>(
+	values: Record<string, MayEntity | string>, object: T, property: KeyOf<T>, data: Record<string, any>
+) {
 	const entries = Object.entries(values)
 	if (areMayEntityEntries(entries)) {
 		Object.assign(object, { [property]: entries.map(([id, value]) => dataSource().connectObject(value, +id)) })
 	}
 	else {
 		delete object[property]
-		Object.assign(object, { [property + 'Ids']: Object.keys(values).map(id => +id) })
+		const data_property_id: Record<string, string> = data[toField(property) + '_id']
+		Object.assign(object, {
+			[property + 'Ids']: Object.keys(values).map(key => +data_property_id[key]).filter(value => value)
+		})
 	}
 	return depends.ignoreTransformedValue
 }
