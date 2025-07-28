@@ -10,7 +10,6 @@ type Dependencies = CollectionTypeDependencies & PrimitiveDependencies & StoreDe
 
 export {
 	initCollectionHtmlTransformers,
-	initCollectionSqlTransformers,
 	initCollectionTransformers
 } from './collection-type'
 
