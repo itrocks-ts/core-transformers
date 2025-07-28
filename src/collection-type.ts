@@ -32,8 +32,8 @@ const depends: Dependencies = {
 	tr:                     text => text
 }
 
-const areMayEntityEntries = (entries: [string, MayEntity | string][]): entries is [string, MayEntity][] =>
-	(typeof entries[0]?.[1])[0] === 'o'
+const areMayEntity = (entries: (MayEntity | string)[]): entries is [string, MayEntity][] =>
+	(typeof entries[0])[0] === 'o'
 
 function collectionEdit<T extends object>(values: MayEntity[], object: T, property: KeyOf<T>)
 {
@@ -65,17 +65,15 @@ function collectionEdit<T extends object>(values: MayEntity[], object: T, proper
 function collectionInput<T extends AnyObject>(
 	values: Record<string, MayEntity | string>, object: T, property: KeyOf<T>, data: Record<string, any>
 ) {
-	const entries = Object.entries(values)
-	if (areMayEntityEntries(entries)) {
-		Object.assign(object, { [property]: entries.map(([id, value]) => dataSource().connectObject(value, +id)) })
+	const entries = Object.values(values)
+	if (areMayEntity(entries)) {
+		return Object.values(values)
 	}
-	else {
-		delete object[property]
-		const data_property_id: Record<string, string> = data[toField(property) + '_id']
-		Object.assign(object, {
-			[property + 'Ids']: Object.keys(values).map(key => +data_property_id[key]).filter(value => value)
-		})
-	}
+	delete object[property]
+	const data_property_id: Record<string, string> = data[toField(property) + '_id']
+	Object.assign(object, {
+		[property + 'Ids']: Object.keys(values).map(key => +data_property_id[key]).filter(value => value)
+	})
 	return depends.ignoreTransformedValue
 }
 
@@ -106,29 +104,6 @@ function collectionOutput<T extends object, PT extends object>(
 	return values.map(object => depends.representativeValueOf(object)).join(', ')
 }
 
-async function collectionSave<T extends AnyObject>(values: MayEntity[] | undefined, object: T, property: KeyOf<T>)
-{
-	const dao = dataSource()
-	const newIdsPromise: Identifier[] = object[property + 'Ids']
-		?? values?.map(async value => (dao.isObjectConnected(value) ? value : await dao.save(value)).id).sort()
-		?? []
-	const previousIdsPromise = dao.isObjectConnected(object)
-		? await dao.readCollectionIds<T, MayEntity>(object, property)
-		: []
-	return async (object: Entity<T>) => {
-		const previousIds = await Promise.all(previousIdsPromise)
-		const newIds      = await Promise.all(newIdsPromise)
-		for (const id of previousIds) {
-			if (newIds.includes(id)) continue
-			dao.deleteRelatedId(object, property, id)
-		}
-		for (const id of newIds) {
-			if (previousIds.includes(id)) continue
-			dao.insertRelatedId(object, property, id)
-		}
-	}
-}
-
 export function initCollectionHtmlTransformers(dependencies: Partial<Dependencies> = {})
 {
 	Object.assign(depends, dependencies)
@@ -137,13 +112,8 @@ export function initCollectionHtmlTransformers(dependencies: Partial<Dependencie
 	setPropertyTypeTransformer(CollectionType, HTML, OUTPUT, collectionOutput)
 }
 
-export function initCollectionSqlTransformers()
-{
-	setPropertyTypeTransformer(CollectionType, SQL, SAVE, collectionSave)
-}
 
 export function initCollectionTransformers(dependencies: Partial<Dependencies> = {})
 {
 	initCollectionHtmlTransformers(dependencies)
-	initCollectionSqlTransformers()
 }
