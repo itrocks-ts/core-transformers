@@ -1,4 +1,7 @@
-import { AnyObject, KeyOf, ObjectOrType } from '@itrocks/class-type'
+import { AnyObject }                      from '@itrocks/class-type'
+import { KeyOf }                          from '@itrocks/class-type'
+import { ObjectOrType }                   from '@itrocks/class-type'
+import { precisionOf }                    from '@itrocks/precision'
 import { setPropertyTypeTransformers }    from '@itrocks/transformer'
 import { EDIT, HTML, INPUT, OUTPUT }      from '@itrocks/transformer'
 import { READ, SAVE, SQL }                from '@itrocks/transformer'
@@ -98,22 +101,52 @@ export function initDateHtmlTransformers()
 
 function numberEdit<T extends object>(value: number | undefined, type: ObjectOrType<T>, property: KeyOf<T>)
 {
+	const output     = numberOutput(value, type, property)
 	const fieldId    = depends.fieldIdOf(property)
 	const fieldName  = depends.fieldNameOf(property)
 	const label      = `<label for="${fieldId}">${depends.tr(depends.displayOf(type, property))}</label>`
 	const name       = `id="${fieldId}" name="${fieldName}"`
-	const inputValue = (value !== undefined) ? ` value="${value}"` : ''
+	const inputValue = (output !== undefined) ? ` value="${output}"` : ''
 	const input      = `<input data-type="number" ${name}${inputValue}>`
 	return label + lfTab + input
+}
+
+function numberInput(value: string)
+{
+	const number = (value === '') ? undefined : +(value.replace(/\s/g, '').replace(',', '.'))
+	if (!Number.isNaN(number)) return number
+	const endChar = value[value.length - 1].toUpperCase()
+	if (endChar === 'K') return (+value.slice(0, -1)) * 1e3
+	if (endChar === 'M') return (+value.slice(0, -1)) * 1e6
+	if (endChar === 'G') return (+value.slice(0, -2)) * 1e9
+	if (endChar === 'T') return (+value.slice(0, -2)) * 1e12
+	if (endChar === 'P') return (+value.slice(0, -2)) * 1e15
+	if ((endChar === 'D') && (value[value.length - 2] === 'M')) return (+value.slice(0, -2)) * 10**9
+	return number
+}
+
+function numberOutput<T extends object>(value: number | undefined, object: ObjectOrType<T>, property: KeyOf<T>)
+{
+	if (value === undefined) return ''
+	const precision = precisionOf(object, property)
+	return value.toLocaleString('fr-FR', {
+		minimumFractionDigits: precision.minimum,
+		maximumFractionDigits: precision.maximum
+	})
+}
+
+function numberRead(value: number | string)
+{
+	return (typeof value === 'string') ? +value : (value ?? undefined)
 }
 
 export function initNumberHtmlTransformers()
 {
 	setPropertyTypeTransformers(Number, [
 		{ format: HTML, direction: EDIT,   transformer: numberEdit },
-		{ format: HTML, direction: INPUT,  transformer: (value: string) => (value === '') ? undefined : +value },
-		{ format: HTML, direction: OUTPUT, transformer: (value?: number) => (value === undefined) ? '' : ('' + value) },
-		{ format: SQL,  direction: READ,   transformer: (value: number | null) => (value === null) ? undefined : value }
+		{ format: HTML, direction: INPUT,  transformer: numberInput },
+		{ format: HTML, direction: OUTPUT, transformer: numberOutput },
+		{ format: SQL,  direction: READ,   transformer: numberRead }
 	])
 }
 
