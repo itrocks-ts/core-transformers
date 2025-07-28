@@ -79,26 +79,20 @@ function storeInput<T extends AnyObject>(
 ) {
 	const propertyId = property + 'Id'
 	const fieldId    = depends.fieldNameOf(propertyId)
-	if (
-		(fieldId in data)
-		&& (
-			(propertyId in object)
-				? (data[fieldId] !== object[propertyId] + '')
-				: (data[fieldId] !== (value as Entity | undefined)?.id + '')
-		)
-	) {
-		delete object[property]
-		const  id = +data[fieldId]
-		if (id) {
-			Object.assign(object, { [propertyId]: id })
-		}
-		else if ((typeof value === 'object')) {
-			Object.assign(object, { [property]: value })
-		}
-		else if ((typeof value === 'string') && (value !== '')) {
-			const reflectProperty = new ReflectProperty(object, property)
-			Object.assign(object, { [property]: new (reflectProperty.type.type as Type)(value) })
-		}
+	const id         = +data[fieldId]
+	if (id === ((propertyId in object) ? object[propertyId] : (value as Entity | undefined)?.id)) {
+		return depends.ignoreTransformedValue
+	}
+	delete object[property]
+	if (id) {
+		Object.assign(object, { [propertyId]: id })
+	}
+	else if ((typeof value === 'object')) {
+		Object.assign(object, { [property]: value })
+	}
+	else if ((typeof value === 'string') && (value !== '')) {
+		const reflectProperty = new ReflectProperty(object, property)
+		Object.assign(object, { [property]: new (reflectProperty.type.type as Type)(value) })
 	}
 	return depends.ignoreTransformedValue
 }
