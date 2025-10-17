@@ -77,7 +77,7 @@ function collectionInput<T extends AnyObject>(
 	return depends.ignoreTransformedValue
 }
 
-function collectionOutput<T extends object, PT extends object>(
+async function collectionOutput<T extends object, PT extends object>(
 	values: MayEntity<PT>[], object: T, property: KeyOf<T>, askFor: HtmlContainer
 ) {
 	if (!values.length) {
@@ -90,16 +90,36 @@ function collectionOutput<T extends object, PT extends object>(
 		const properties    = propertyClass.propertyNames.filter(property => !compositeOf(type, property)) as KeyOf<PT>[]
 		const html = []
 		html.push('<table>')
-		html.push('<tr>' + properties.map(property => '<th>' + depends.tr(property) + '</th>').join('') + '</tr>')
-		html.push(...values.map(
-			value => '<tr>' + properties.map(property => '<td>' + value[property] + '</td>').join('') + '</tr>'
-		))
+		html.push(
+			'<tr>'
+			+ properties.map(property =>
+				'<th>'
+				+ depends.tr(property)
+				+ '</th>'
+			).join('')
+			+ '</tr>')
+		html.push(...await Promise.all(values.map(
+			async value =>
+				'<tr>'
+				+ (await Promise.all(properties.map(async property =>
+					'<td>'
+					+ (await value[property])
+					+ '</td>'
+				))).join('')
+				+ '</tr>'
+		)))
 		html.push('</table>')
 		return html.join('\n')
 	}
 	if (askFor?.container) {
 		askFor.container = false
-		return '<ul>' + values.map(object => '<li>' + depends.representativeValueOf(object) + '</li>').join('') + '</ul>'
+		return '<ul>'
+			+ values.map(object =>
+				'<li>'
+				+ depends.representativeValueOf(object)
+				+ '</li>'
+			).join('')
+			+ '</ul>'
 	}
 	return values.map(object => depends.representativeValueOf(object)).join(', ')
 }
@@ -111,7 +131,6 @@ export function initCollectionHtmlTransformers(dependencies: Partial<Dependencie
 	setPropertyTypeTransformer(CollectionType, HTML, INPUT,  collectionInput)
 	setPropertyTypeTransformer(CollectionType, HTML, OUTPUT, collectionOutput)
 }
-
 
 export function initCollectionTransformers(dependencies: Partial<Dependencies> = {})
 {
