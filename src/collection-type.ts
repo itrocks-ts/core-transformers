@@ -94,7 +94,7 @@ async function collectionOutput<T extends object, PT extends object>(
 			'<tr>'
 			+ properties.map(property =>
 				'<th>'
-				+ depends.tr(property)
+				+ depends.tr(depends.displayOf(type, property))
 				+ '</th>'
 			).join('')
 			+ '</tr>')
