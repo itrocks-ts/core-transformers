@@ -17,7 +17,7 @@ export type Dependencies = SqlDependencies & {
 	displayOf:              (object: AnyObject, property: string) => string,
 	fieldIdOf:              (property: string) => string,
 	fieldNameOf:            (property: string) => string,
-	representativeValueOf:  (object: object) => string,
+	representativeValueOf:  (object: object) => Promise<string>,
 	routeOf:                (type: Type) => string,
 	tr:                     (text: string) => string
 }
@@ -27,7 +27,7 @@ const depends: Dependencies = {
 	fieldIdOf:              property => property,
 	fieldNameOf:            property => property,
 	ignoreTransformedValue: Symbol('ignoreTransformedValue'),
-	representativeValueOf:  object => baseType(typeOf(object)).name,
+	representativeValueOf:  async object => baseType(typeOf(object)).name,
 	routeOf:                type => '/' + baseType(type).name,
 	tr:                     text => text
 }
