@@ -17,7 +17,8 @@ export type Dependencies = {
 	fieldNameOf:            (property: string) => string,
 	fieldIdOf:              (property: string) => string,
 	ignoreTransformedValue: any,
-	representativeValueOf:  (object: object) => string,
+	propertyOutput:         <T extends object>(object: T, property: KeyOf<T>) => Promise<string>,
+	representativeValueOf:  (object: object) => Promise<string>,
 	routeOf:                (type: Type) => string,
 	tr:                     (text: string) => string
 }
@@ -27,7 +28,8 @@ const depends: Dependencies = {
 	fieldNameOf:            property => property,
 	fieldIdOf:              property => property,
 	ignoreTransformedValue: Symbol('ignoreTransformedValue'),
-	representativeValueOf:  object => baseType(typeOf(object)).name,
+	propertyOutput:         async (object, property) => '' + await object[property],
+	representativeValueOf:  async object => baseType(typeOf(object)).name,
 	routeOf:                type => '/' + baseType(type).name,
 	tr:                     text => text
 }
@@ -103,7 +105,7 @@ async function collectionOutput<T extends object, PT extends object>(
 				'<tr>'
 				+ (await Promise.all(properties.map(async property =>
 					'<td>'
-					+ (await value[property])
+					+ (await depends.propertyOutput(value, property))
 					+ '</td>'
 				))).join('')
 				+ '</tr>'
@@ -114,11 +116,11 @@ async function collectionOutput<T extends object, PT extends object>(
 	if (askFor?.container) {
 		askFor.container = false
 		return '<ul>'
-			+ values.map(object =>
+			+ (await Promise.all(values.map(async object =>
 				'<li>'
-				+ depends.representativeValueOf(object)
+				+ (await depends.representativeValueOf(object))
 				+ '</li>'
-			).join('')
+			))).join('')
 			+ '</ul>'
 	}
 	return values.map(object => depends.representativeValueOf(object)).join(', ')
