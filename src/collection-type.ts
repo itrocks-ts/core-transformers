@@ -37,7 +37,7 @@ const depends: Dependencies = {
 const areMayEntity = (entries: (MayEntity | string)[]): entries is [string, MayEntity][] =>
 	(typeof entries[0])[0] === 'o'
 
-function collectionEdit<T extends object>(values: MayEntity[], object: T, property: KeyOf<T>)
+async function collectionEdit<T extends object>(values: MayEntity[], object: T, property: KeyOf<T>)
 {
 	const fieldId      = depends.fieldIdOf(property)
 	const fieldName    = depends.fieldNameOf(property)
@@ -46,7 +46,7 @@ function collectionEdit<T extends object>(values: MayEntity[], object: T, proper
 	const label        = `<label for="${fieldId}">${depends.tr(depends.displayOf(object, property))}</label>`
 	const inputs       = []
 	for (const object of values) {
-		const attrValue = `value="${depends.representativeValueOf(object)}"`
+		const attrValue = `value="${await depends.representativeValueOf(object)}"`
 		const objectId  = dataSource().isObjectConnected(object) ? '' + object.id : ''
 		inputs.push(
 			'<li>'
@@ -123,7 +123,7 @@ async function collectionOutput<T extends object, PT extends object>(
 			))).join('')
 			+ '</ul>'
 	}
-	return values.map(object => depends.representativeValueOf(object)).join(', ')
+	return (await Promise.all(values.map(object => depends.representativeValueOf(object)))).join(', ')
 }
 
 export function initCollectionHtmlTransformers(dependencies: Partial<Dependencies> = {})

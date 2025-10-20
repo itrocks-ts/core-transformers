@@ -59,12 +59,12 @@ export const setStoreHtmlDependencies = setStoreDependencies
 
 export const setStoreSqlDependencies: (dependencies: Partial<SqlDependencies>) => void = setStoreDependencies
 
-function storeEdit<T extends object>(value: Entity | undefined, object: T, property: KeyOf<T>)
+async function storeEdit<T extends object>(value: Entity | undefined, object: T, property: KeyOf<T>)
 {
 	const fieldName  = depends.fieldNameOf(property)
 	const fieldId    = depends.fieldIdOf(property)
 	const type       = new ReflectProperty(object, property).type.type as Type
-	const textValue  = value ? depends.representativeValueOf(value) : ''
+	const textValue  = value ? await depends.representativeValueOf(value) : ''
 	const fetch      = depends.routeOf(type) + '/summary'
 	const label      = `<label for="${fieldId}">${depends.tr(depends.displayOf(object, property))}</label>`
 	const name       = `id="${fieldId}" name="${fieldName}"`
@@ -97,9 +97,9 @@ function storeInput<T extends AnyObject>(
 	return depends.ignoreTransformedValue
 }
 
-function storeOutput(value: MayEntity | undefined)
+async function storeOutput(value: MayEntity | undefined)
 {
-	return value ? depends.representativeValueOf(value) : ''
+	return value ? await depends.representativeValueOf(value) : ''
 }
 
 async function storeSave<T extends AnyObject>(
