@@ -7,6 +7,7 @@
 		"@itrocks/composition": "latest",
 		"@itrocks/storage": "latest",
 		"@itrocks/class-type": "latest",
+		"@itrocks/precision": "latest",
 		"@itrocks/property-type": "latest",
 		"@itrocks/reflect": "latest",
 		"@itrocks/transformer": "latest"
@@ -48,5 +49,5 @@
 		"build:esm": "tsc -p tsconfig.esm.json && node esm/esm"
 	},
 	"types": "./esm/core-transformers.d.ts",
-	"version": "0.0.16"
+	"version": "0.0.17"
 }
