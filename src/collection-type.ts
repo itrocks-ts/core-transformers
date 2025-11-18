@@ -1,6 +1,6 @@
 import { componentOf, compositeOf }   from '@itrocks/composition'
-import { dataSource, Entity }         from '@itrocks/storage'
-import { Identifier, MayEntity }      from '@itrocks/storage'
+import { dataSource }                 from '@itrocks/storage'
+import { MayEntity }                  from '@itrocks/storage'
 import { AnyObject, baseType }        from '@itrocks/class-type'
 import { KeyOf, Type, typeOf }        from '@itrocks/class-type'
 import { CollectionType }             from '@itrocks/property-type'
@@ -8,7 +8,7 @@ import { toField }                    from '@itrocks/rename'
 import { ReflectClass }               from '@itrocks/reflect'
 import { ReflectProperty }            from '@itrocks/reflect'
 import { EDIT, HTML }                 from '@itrocks/transformer'
-import { INPUT, OUTPUT, SAVE, SQL }   from '@itrocks/transformer'
+import { INPUT, OUTPUT }              from '@itrocks/transformer'
 import { setPropertyTypeTransformer } from '@itrocks/transformer'
 import { HtmlContainer }              from './container'
 
@@ -120,10 +120,10 @@ async function collectionOutput<T extends object, PT extends object>(
 				'<li>'
 				+ (await depends.representativeValueOf(object))
 				+ '</li>'
-			))).join('')
+			))).sort().join('')
 			+ '</ul>'
 	}
-	return (await Promise.all(values.map(object => depends.representativeValueOf(object)))).join(', ')
+	return (await Promise.all(values.map(object => depends.representativeValueOf(object)))).sort().join(', ')
 }
 
 export function initCollectionHtmlTransformers(dependencies: Partial<Dependencies> = {})
