@@ -35,7 +35,16 @@
 	"homepage": "https://it.rocks",
 	"keywords": [
 		"backend",
-		"it.rocks"
+		"collections",
+		"core",
+		"entities",
+		"form",
+		"forms",
+		"html",
+		"it.rocks",
+		"sql",
+		"transformer",
+		"transformers"
 	],
 	"license": "ISC",
 	"name": "@itrocks/core-transformers",
@@ -49,5 +58,5 @@
 		"build:esm": "tsc -p tsconfig.esm.json && node esm/esm"
 	},
 	"types": "./esm/core-transformers.d.ts",
-	"version": "0.1.2"
+	"version": "0.1.3"
 }
