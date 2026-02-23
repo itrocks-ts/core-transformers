@@ -50,16 +50,16 @@ async function collectionEdit<T extends object>(values: MayEntity[], object: T, 
 		const objectId  = dataSource().isObjectConnected(object) ? '' + object.id : ''
 		inputs.push(
 			'<li>'
-			+ `<input name="${fieldName}.${objectId}" ${attrValue}>`
 			+ `<input id="${fieldId}-id.${objectId}" name="${fieldName}_id.${objectId}" type="hidden" value="${objectId}">`
+			+ `<input name="${fieldName}.${objectId}" ${attrValue}>`
 			+ '</li>'
 		)
 	}
 	return label + `<ul data-multiple-contained-auto-width data-fetch="${fetch}" data-type="objects">`
 		+ inputs.join('')
 		+ '<li>'
-		+ `<input name="${fieldName}" placeholder="+">`
 		+ `<input id="${fieldId}-id" name="${fieldName}_id" type="hidden">`
+		+ `<input name="${fieldName}" placeholder="+">`
 		+ '</li>'
 		+ '</ul>'
 }

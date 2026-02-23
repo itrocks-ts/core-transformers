@@ -71,7 +71,7 @@ async function storeEdit<T extends object>(value: Entity | undefined, object: T,
 	const inputValue = (textValue === '') ? '' : ` value="${textValue}"`
 	const input      = `<input data-fetch="${fetch}" data-type="object" ${name}${inputValue}>`
 	const inputId    = `<input id="${fieldId}-id" name="${fieldName}_id" type="hidden" value="${value?.id}">`
-	return label + lfTab + input + inputId
+	return label + lfTab + inputId + input
 }
 
 function storeInput<T extends AnyObject>(

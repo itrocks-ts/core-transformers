@@ -58,5 +58,5 @@
 		"build:esm": "tsc -p tsconfig.esm.json && node esm/esm"
 	},
 	"types": "./esm/core-transformers.d.ts",
-	"version": "0.1.3"
+	"version": "0.1.4"
 }
