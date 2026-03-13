@@ -1,32 +1,34 @@
-import { componentOf, compositeOf }   from '@itrocks/composition'
+import { componentOf }                from '@itrocks/composition'
+import { compositeOf }                from '@itrocks/composition'
 import { dataSource }                 from '@itrocks/storage'
 import { MayEntity }                  from '@itrocks/storage'
-import { AnyObject, baseType }        from '@itrocks/class-type'
-import { KeyOf, Type, typeOf }        from '@itrocks/class-type'
+import { baseType }                   from '@itrocks/class-type'
+import { ObjectOrType }               from '@itrocks/class-type'
+import { Type }                       from '@itrocks/class-type'
+import { typeOf }                     from '@itrocks/class-type'
 import { CollectionType }             from '@itrocks/property-type'
 import { toField }                    from '@itrocks/rename'
 import { ReflectClass }               from '@itrocks/reflect'
 import { ReflectProperty }            from '@itrocks/reflect'
-import { EDIT, HTML }                 from '@itrocks/transformer'
-import { INPUT, OUTPUT }              from '@itrocks/transformer'
+import { EDIT, HTML, INPUT, OUTPUT }  from '@itrocks/transformer'
 import { setPropertyTypeTransformer } from '@itrocks/transformer'
 import { HtmlContainer }              from './container'
 
 export type Dependencies = {
-	displayOf:              (object: AnyObject, property: string) => string,
-	fieldNameOf:            (property: string) => string,
-	fieldIdOf:              (property: string) => string,
+	displayOf:              <T extends object>(object: ObjectOrType<T>, property: keyof T) => string,
+	fieldNameOf:            (property: keyof any) => string,
+	fieldIdOf:              (property: keyof any) => string,
 	ignoreTransformedValue: any,
-	propertyOutput:         <T extends object>(object: T, property: KeyOf<T>) => Promise<string>,
+	propertyOutput:         <T extends object>(object: T, property: keyof T) => Promise<string>,
 	representativeValueOf:  (object: object) => Promise<string>,
 	routeOf:                (type: Type) => string,
 	tr:                     (text: string) => string
 }
 
 const depends: Dependencies = {
-	displayOf:              (_object, property) => property,
-	fieldNameOf:            property => property,
-	fieldIdOf:              property => property,
+	displayOf:              (_object, property) => property.toString(),
+	fieldNameOf:            property => property.toString(),
+	fieldIdOf:              property => property.toString(),
 	ignoreTransformedValue: Symbol('ignoreTransformedValue'),
 	propertyOutput:         async (object, property) => '' + await object[property],
 	representativeValueOf:  async object => baseType(typeOf(object)).name,
@@ -37,7 +39,7 @@ const depends: Dependencies = {
 const areMayEntity = (entries: (MayEntity | string)[]): entries is [string, MayEntity][] =>
 	(typeof entries[0])[0] === 'o'
 
-async function collectionEdit<T extends object>(values: MayEntity[], object: T, property: KeyOf<T>)
+async function collectionEdit<T extends object>(values: MayEntity[], object: T, property: keyof T)
 {
 	const fieldId      = depends.fieldIdOf(property)
 	const fieldName    = depends.fieldNameOf(property)
@@ -64,8 +66,8 @@ async function collectionEdit<T extends object>(values: MayEntity[], object: T, 
 		+ '</ul>'
 }
 
-function collectionInput<T extends AnyObject>(
-	values: Record<string, MayEntity | string>, object: T, property: KeyOf<T>, data: Record<string, any>
+function collectionInput<T extends object>(
+	values: Record<string, MayEntity | string>, object: T, property: keyof T, data: Record<string, any>
 ) {
 	const entries = Object.values(values)
 	if (areMayEntity(entries)) {
@@ -74,22 +76,22 @@ function collectionInput<T extends AnyObject>(
 	delete object[property]
 	const data_property_id: Record<string, string> = data[toField(property) + '_id']
 	Object.assign(object, {
-		[property + 'Ids']: Object.keys(values).map(key => +data_property_id[key]).filter(value => value)
+		[property.toString() + 'Ids']: Object.keys(values).map(key => +data_property_id[key]).filter(value => value)
 	})
 	return depends.ignoreTransformedValue
 }
 
 async function collectionOutput<T extends object, PT extends object>(
-	values: MayEntity<PT>[], object: T, property: KeyOf<T>, askFor: HtmlContainer
+	values: MayEntity<PT>[], object: T, property: keyof T, askFor: HtmlContainer
 ) {
 	if (!values.length) {
 		return ''
 	}
 	if (componentOf(object, property)) {
-		const propertyType = new ReflectProperty(object, property).collectionType
-		const type          = propertyType.elementType.type as Type
+		const propertyType  = new ReflectProperty(object, property).collectionType
+		const type          = propertyType.elementType.type as Type<PT>
 		const propertyClass = new ReflectClass(type)
-		const properties    = propertyClass.propertyNames.filter(property => !compositeOf(type, property)) as KeyOf<PT>[]
+		const properties    = propertyClass.propertyNames.filter(property => !compositeOf(type, property)) as (keyof PT)[]
 		const html = []
 		html.push('<table>')
 		html.push(

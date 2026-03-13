@@ -1,18 +1,16 @@
-import { AnyObject }                      from '@itrocks/class-type'
-import { KeyOf }                          from '@itrocks/class-type'
-import { ObjectOrType }                   from '@itrocks/class-type'
-import { precisionOf }                    from '@itrocks/precision'
-import { setPropertyTypeTransformers }    from '@itrocks/transformer'
-import { EDIT, HTML, INPUT, OUTPUT }      from '@itrocks/transformer'
-import { READ, SAVE, SQL }                from '@itrocks/transformer'
+import { ObjectOrType }                from '@itrocks/class-type'
+import { precisionOf }                 from '@itrocks/precision'
+import { setPropertyTypeTransformers } from '@itrocks/transformer'
+import { EDIT, HTML, INPUT, OUTPUT }   from '@itrocks/transformer'
+import { READ, SAVE, SQL }             from '@itrocks/transformer'
 
 const lfTab = '\n\t\t\t\t'
 
 export type CoreDependencies = {
-	displayOf:   (object: AnyObject, property: string) => string,
-	fieldIdOf:   (property: string) => string,
-	fieldNameOf: (property: string) => string,
-	tr:          (text: string)     => string
+	displayOf:   <T extends object>(object: ObjectOrType<T>, property: keyof T) => string,
+	fieldIdOf:   (property: keyof any) => string,
+	fieldNameOf: (property: keyof any) => string,
+	tr:          (text: string) => string
 }
 
 export type Dependencies = CoreDependencies & {
@@ -21,10 +19,10 @@ export type Dependencies = CoreDependencies & {
 }
 
 const depends: Dependencies = {
-	displayOf:   (_object, property) => property,
+	displayOf:   (_object, property) => property.toString(),
 	formatDate:  date     => date.toString(),
-	fieldIdOf:   property => property,
-	fieldNameOf: property => property,
+	fieldIdOf:   property => property.toString(),
+	fieldNameOf: property => property.toString(),
 	parseDate:   date     => new Date(date),
 	tr:          text     => text
 }
@@ -40,7 +38,7 @@ export function initBigintHtmlTransformers()
 
 // Boolean
 
-function booleanEdit<T extends object>(value: boolean, type: ObjectOrType<T>, property: KeyOf<T>)
+function booleanEdit<T extends object>(value: boolean, type: ObjectOrType<T>, property: keyof T)
 {
 	const fieldId   = depends.fieldIdOf(property)
 	const fieldName = depends.fieldNameOf(property)
@@ -74,7 +72,7 @@ export function initBooleanSqlTransformers()
 
 // Date
 
-function dateEdit<T extends object>(value: Date, type: ObjectOrType<T>, property: KeyOf<T>)
+function dateEdit<T extends object>(value: Date, type: ObjectOrType<T>, property: keyof T)
 {
 	const fieldId    = depends.fieldIdOf(property)
 	const fieldName  = depends.fieldNameOf(property)
@@ -99,7 +97,7 @@ export function initDateHtmlTransformers()
 
 // Number
 
-function numberEdit<T extends object>(value: number | undefined, type: ObjectOrType<T>, property: KeyOf<T>)
+function numberEdit<T extends object>(value: number | undefined, type: ObjectOrType<T>, property: keyof T)
 {
 	const output     = numberOutput(value, type, property)
 	const fieldId    = depends.fieldIdOf(property)
@@ -125,7 +123,7 @@ function numberInput(value: string)
 	return number
 }
 
-function numberOutput<T extends object>(value: number | undefined, object: ObjectOrType<T>, property: KeyOf<T>)
+function numberOutput<T extends object>(value: number | undefined, object: ObjectOrType<T>, property: keyof T)
 {
 	if (value === undefined) return ''
 	const precision = precisionOf(object, property)
@@ -152,7 +150,7 @@ export function initNumberHtmlTransformers()
 
 // default
 
-function defaultEdit<T extends object>(value: any, type: ObjectOrType<T>, property: KeyOf<T>)
+function defaultEdit<T extends object>(value: any, type: ObjectOrType<T>, property: keyof T)
 {
 	const fieldId    = depends.fieldIdOf(property)
 	const fieldName  = depends.fieldNameOf(property)

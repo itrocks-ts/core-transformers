@@ -1,11 +1,15 @@
-import {AnyObject, baseType, KeyOf, typeOf} from '@itrocks/class-type'
-import { StringObject }                     from '@itrocks/class-type'
-import { Type }                             from '@itrocks/class-type'
-import { ReflectProperty }                  from '@itrocks/reflect'
-import { dataSource, Entity, MayEntity }    from '@itrocks/storage'
-import { setPropertyTypeTransformer }       from '@itrocks/transformer'
-import { EDIT, HTML }                       from '@itrocks/transformer'
-import { INPUT, OUTPUT, SAVE, SQL }         from '@itrocks/transformer'
+import { baseType }                   from '@itrocks/class-type'
+import { ObjectOrType }               from '@itrocks/class-type'
+import { typeOf }                     from '@itrocks/class-type'
+import { StringObject }               from '@itrocks/class-type'
+import { Type }                       from '@itrocks/class-type'
+import { ReflectProperty }            from '@itrocks/reflect'
+import { dataSource }                 from '@itrocks/storage'
+import { Entity }                     from '@itrocks/storage'
+import { MayEntity }                  from '@itrocks/storage'
+import { setPropertyTypeTransformer } from '@itrocks/transformer'
+import { EDIT, HTML }                 from '@itrocks/transformer'
+import { INPUT, OUTPUT, SAVE, SQL }   from '@itrocks/transformer'
 
 const lfTab = '\n\t\t\t\t'
 
@@ -14,18 +18,18 @@ export type SqlDependencies = {
 }
 
 export type Dependencies = SqlDependencies & {
-	displayOf:              (object: AnyObject, property: string) => string,
-	fieldIdOf:              (property: string) => string,
-	fieldNameOf:            (property: string) => string,
+	displayOf:              <T extends object>(object: ObjectOrType<T>, property: keyof T) => string,
+	fieldIdOf:              (property: keyof any) => string,
+	fieldNameOf:            (property: keyof any) => string,
 	representativeValueOf:  (object: object) => Promise<string>,
 	routeOf:                (type: Type) => string,
 	tr:                     (text: string) => string
 }
 
 const depends: Dependencies = {
-	displayOf:              (_object, property) => property,
-	fieldIdOf:              property => property,
-	fieldNameOf:            property => property,
+	displayOf:              (_object, property) => property.toString(),
+	fieldIdOf:              property => property.toString(),
+	fieldNameOf:            property => property.toString(),
 	ignoreTransformedValue: Symbol('ignoreTransformedValue'),
 	representativeValueOf:  async object => baseType(typeOf(object)).name,
 	routeOf:                type => '/' + baseType(type).name,
@@ -59,7 +63,7 @@ export const setStoreHtmlDependencies = setStoreDependencies
 
 export const setStoreSqlDependencies: (dependencies: Partial<SqlDependencies>) => void = setStoreDependencies
 
-async function storeEdit<T extends object>(value: Entity | undefined, object: T, property: KeyOf<T>)
+async function storeEdit<T extends object>(value: Entity | undefined, object: T, property: keyof T)
 {
 	const fieldName  = depends.fieldNameOf(property)
 	const fieldId    = depends.fieldIdOf(property)
@@ -74,10 +78,10 @@ async function storeEdit<T extends object>(value: Entity | undefined, object: T,
 	return label + lfTab + inputId + input
 }
 
-function storeInput<T extends AnyObject>(
-	value: MayEntity | string | undefined, object: T, property: KeyOf<T>, data: StringObject
+function storeInput<T extends object>(
+	value: MayEntity | string | undefined, object: T, property: keyof T, data: StringObject
 ) {
-	const propertyId = property + 'Id'
+	const propertyId = (property.toString() + 'Id') as keyof T
 	const fieldId    = depends.fieldNameOf(propertyId)
 	const id         = +data[fieldId]
 	if (id === ((propertyId in object) ? object[propertyId] : (value as Entity | undefined)?.id)) {
@@ -102,14 +106,13 @@ async function storeOutput(value: MayEntity | undefined)
 	return value ? await depends.representativeValueOf(value) : ''
 }
 
-async function storeSave<T extends AnyObject>(
-	value: MayEntity | undefined, _object: T, property: KeyOf<T>, record: AnyObject
-) {
+async function storeSave<T extends object>(value: MayEntity | undefined, _object: T, property: keyof T, record: any)
+{
 	const dao = dataSource()
 	if (value && !dao.isObjectConnected(value)) {
 		await dao.save(value)
 	}
-	const columnId   = property + '_id'
+	const columnId   = property.toString() + '_id'
 	const id         = (value && dao.isObjectConnected(value)) ? value.id : record[columnId]
 	record[columnId] = id ?? null
 	return depends.ignoreTransformedValue
