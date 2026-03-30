@@ -3,6 +3,7 @@ import { ObjectOrType }               from '@itrocks/class-type'
 import { typeOf }                     from '@itrocks/class-type'
 import { StringObject }               from '@itrocks/class-type'
 import { Type }                       from '@itrocks/class-type'
+import { representativeOf }           from '@itrocks/class-view'
 import { ReflectProperty }            from '@itrocks/reflect'
 import { dataSource }                 from '@itrocks/storage'
 import { Entity }                     from '@itrocks/storage'
@@ -96,7 +97,12 @@ function storeInput<T extends object>(
 	}
 	else if ((typeof value === 'string') && (value !== '')) {
 		const reflectProperty = new ReflectProperty(object, property)
-		Object.assign(object, { [property]: new (reflectProperty.type.type as Type)(value) })
+		const newObject: any  = new (reflectProperty.type.type as Type)(value)
+		const representative  = representativeOf(newObject)[0]
+		if (representative && (newObject[representative] === undefined)) {
+			newObject[representative] = value
+		}
+		Object.assign(object, { [property]: newObject })
 	}
 	return depends.ignoreTransformedValue
 }
