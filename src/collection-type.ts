@@ -39,14 +39,43 @@ const depends: Dependencies = {
 const areMayEntity = (entries: (MayEntity | string)[]): entries is [string, MayEntity][] =>
 	(typeof entries[0])[0] === 'o'
 
-async function collectionEdit<T extends object>(values: MayEntity[], object: T, property: keyof T)
-{
+async function collectionEdit<T extends object, PT extends object>(
+	values: MayEntity<PT>[], object: T, property: keyof T
+) {
 	const fieldId      = depends.fieldIdOf(property)
 	const fieldName    = depends.fieldNameOf(property)
 	const propertyType = new ReflectProperty(object, property).collectionType
 	const fetch        = depends.routeOf(propertyType.elementType.type as Type) + '/summary'
 	const label        = `<label for="${fieldId}">${depends.tr(depends.displayOf(object, property))}</label>`
 	const inputs       = []
+	if (componentOf(object, property)) {
+		const propertyType  = new ReflectProperty(object, property).collectionType
+		const type          = propertyType.elementType.type as Type<PT>
+		const propertyClass = new ReflectClass(type)
+		const properties    = propertyClass.propertyNames.filter(property => !compositeOf(type, property))
+		const html = []
+		html.push('<table>')
+		html.push(
+			'<tr>'
+			+ properties.map(property =>
+				'<th>'
+				+ depends.tr(depends.displayOf(type, property))
+				+ '</th>'
+			).join('')
+			+ '</tr>')
+		html.push(...await Promise.all(values.map(
+			async value =>
+				'<tr>'
+				+ (await Promise.all(properties.map(async property =>
+					'<td>'
+					+ (await depends.propertyOutput(value, property))
+					+ '</td>'
+				))).join('')
+				+ '</tr>'
+		)))
+		html.push('</table>')
+		return label + html.join('\n')
+	}
 	for (const object of values) {
 		const attrValue = `value="${await depends.representativeValueOf(object)}"`
 		const objectId  = dataSource().isObjectConnected(object) ? '' + object.id : ''
@@ -91,7 +120,7 @@ async function collectionOutput<T extends object, PT extends object>(
 		const propertyType  = new ReflectProperty(object, property).collectionType
 		const type          = propertyType.elementType.type as Type<PT>
 		const propertyClass = new ReflectClass(type)
-		const properties    = propertyClass.propertyNames.filter(property => !compositeOf(type, property)) as (keyof PT)[]
+		const properties    = propertyClass.propertyNames.filter(property => !compositeOf(type, property))
 		const html = []
 		html.push('<table>')
 		html.push(
