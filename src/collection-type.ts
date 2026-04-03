@@ -55,14 +55,19 @@ async function collectionEdit<T extends object, PT extends object>(
 		const properties    = propertyClass.propertyNames.filter(property => !compositeOf(type, property))
 		const html = []
 		html.push('<table>')
-		html.push(
-			'<tr>'
-			+ properties.map(property =>
-				'<th>'
-				+ depends.tr(depends.displayOf(type, property))
-				+ '</th>'
-			).join('')
-			+ '</tr>')
+		if (values.length) {
+			html.push(
+				'<tr>'
+				+ properties.map(property =>
+					'<th>'
+					+ depends.tr(depends.displayOf(type, property))
+					+ '</th>'
+				).join('')
+				+ '</tr>')
+		}
+		else {
+			html.push('<caption>' + depends.tr('Empty') + '</caption>')
+		}
 		html.push(...await Promise.all(values.map(
 			async value =>
 				'<tr>'
