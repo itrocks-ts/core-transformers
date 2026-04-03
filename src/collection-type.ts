@@ -118,7 +118,8 @@ function collectionInput<T extends object>(
 async function collectionOutput<T extends object, PT extends object>(
 	values: MayEntity<PT>[], object: T, property: keyof T, askFor: HtmlContainer
 ) {
-	if (!values.length) {
+	// TODO values should always be defined
+	if (!values?.length) {
 		return ''
 	}
 	if (componentOf(object, property)) {
