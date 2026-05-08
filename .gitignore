@@ -1,7 +1,4 @@
 /.idea
 /node_modules
 /package-lock.json
-/css
-*.d.ts
-*.js
-*.map
+/cjs
