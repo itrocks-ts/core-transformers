@@ -10,7 +10,6 @@
 		"@itrocks/class-view": "latest",
 		"@itrocks/precision": "latest",
 		"@itrocks/property-type": "latest",
-		"@itrocks/property-view": "latest",
 		"@itrocks/reflect": "latest",
 		"@itrocks/rename": "latest",
 		"@itrocks/transformer": "latest"
@@ -52,5 +51,5 @@
 	"scripts": {
 		"build": "tsc"
 	},
-	"version": "0.2.7"
+	"version": "0.2.8"
 }
