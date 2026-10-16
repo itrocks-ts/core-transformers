@@ -107,7 +107,7 @@ function storeInput<T extends object>(
 	return depends.ignoreTransformedValue
 }
 
-async function storeOutput(value: MayEntity | undefined)
+export async function storeOutput(value: MayEntity | undefined)
 {
 	return value ? await depends.representativeValueOf(value) : ''
 }

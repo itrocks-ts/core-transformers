@@ -113,9 +113,9 @@ run you get consistent behaviour across the whole application.
 
 ## API
 
-All exports register or configure transformers in the global
-`@itrocks/transformer` registry. They do not return values; their role is
-to set up the transformation rules used elsewhere.
+The initialisers register or configure transformers in the global
+`@itrocks/transformer` registry. The public `storeOutput` function transforms a stored value using the configured
+representative callback. `HtmlContainer` carries HTML wrapping options.
 
 ### Core initialiser
 
@@ -354,3 +354,13 @@ need a custom sentinel.
 - **Framework integration** – plug the dependencies into your own
   routing, translation and display helpers so that the same configuration
   is reused across multiple projects.
+
+### Standard store output
+
+`storeOutput(value)` is the public function registered by `initStoreHtmlTransformers` for HTML output.
+It preserves the configured asynchronous `representativeValueOf` callback and renders absent values as empty text.
+Consumers may compare its identity with `resolveTransformer` from `@itrocks/transformer` to distinguish the standard
+store representation from a property/type override. A custom representative callback must separately declare its
+required fields to any projection consumer; function identity does not describe arbitrary callback dependencies.
+
+`npm test` verifies the published function, registration, asynchronous callback and absent-value behaviour.

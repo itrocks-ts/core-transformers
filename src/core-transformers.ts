@@ -35,8 +35,9 @@ export {
 	initStoreSqlTransformers,
 	initStoreTransformers,
 	setStoreDependencies,
+	setStoreHtmlDependencies,
 	setStoreSqlDependencies,
-	setStoreHtmlDependencies
+	storeOutput
 } from './store'
 
 export function initCoreTransformers(dependencies: Partial<Dependencies>)
